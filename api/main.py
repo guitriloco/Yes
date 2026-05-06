@@ -5,6 +5,7 @@ import os
 import httpx
 import asyncio
 import logging
+from typing import Optional, List, Dict, Any
 
 # Add projets to path for sovereign_essence
 sys.path.append(os.path.expanduser("~/projets"))
@@ -21,12 +22,12 @@ app = FastAPI(title="Yes Yield Execution Engine")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("YES-CONQUEROR")
 
-SOVEREIGN_API_URL = "http://localhost:8000"
+SOVEREIGN_API_URL = "http://localhost:8011"
 VVV_URL = "http://localhost:8003"
 
 optimizer = HarvestOptimizer()
 
-def calculate_roi(data: dict) -> float:
+def calculate_roi(data: dict, region: Optional[str] = None) -> float:
     """
     Analyzes performance and efficiency to calculate ROI.
     Optimized by Atomic Evolution.
@@ -37,10 +38,11 @@ def calculate_roi(data: dict) -> float:
     complexity = data.get("complexity", 1.0)
     
     # Apply optimization level from HarvestOptimizer
-    roi = (performance * efficiency * optimizer.optimization_level) / max(complexity, 0.1)
+    level = optimizer.regional_levels.get(region, optimizer.optimization_level) if region else optimizer.optimization_level
+    roi = (performance * efficiency * level) / max(complexity, 0.1)
     return round(roi, 4)
 
-def execute_high_yield(refinement_result: dict):
+def execute_high_yield(refinement_result: dict, region: Optional[str] = None):
     # 1. Atomic Evolution Check (Cross-Build from SUPRA)
     latency_us = refinement_result.get("latency_us", 100)
     mode = optimizer.apply_atomic_evolution({"latency_us": latency_us})
@@ -48,14 +50,14 @@ def execute_high_yield(refinement_result: dict):
     # 2. Execute the refined logic (Conquer)
     # (Simulated execution of refined_logic based on mode)
     if mode == "FAST_HARVEST":
-        logger.info("[YES] Atomic Shift: Executing FAST_HARVEST mode")
+        logger.info(f"[YES] Atomic Shift: Executing FAST_HARVEST mode for region: {region or 'GLOBAL'}")
     
     # 3. Calculate Yield (Performance/Efficiency metrics)
-    actual_roi = calculate_roi(refinement_result)
+    actual_roi = calculate_roi(refinement_result, region)
     
     # 4. Self-Optimization Trigger (Sub-millisecond signals)
     if actual_roi < 0.95:
-        optimizer.optimize_logic("execute_high_yield", actual_roi)
+        optimizer.optimize_logic("execute_high_yield", actual_roi, region)
     
     # 5. If ROI > Threshold, mark as "Absolute Nectar"
     is_absolute_nectar = actual_roi > 0.98
@@ -63,6 +65,7 @@ def execute_high_yield(refinement_result: dict):
     result = {
         "execution_status": "CONQUERED",
         "mode": mode,
+        "region": region or "GLOBAL",
         "yield_roi": actual_roi,
         "is_absolute_nectar": is_absolute_nectar,
         "nectar_classification": "Absolute Nectar" if is_absolute_nectar else "High Grade Nectar",
@@ -76,8 +79,11 @@ async def distillation_loop():
     """
     The Nectar Distillation Loop.
     Periodically analyzes cycles, anticipates spikes via Aether-Mesh, and marks 'Absolute Nectar'.
+    Expanded for Trinity Ascension (Alpha, Beta, Gamma).
     """
     logger.info("Starting Nectar Distillation Loop...")
+    regions = ["ALPHA", "BETA", "GAMMA", "GLOBAL"]
+    
     while True:
         try:
             async with httpx.AsyncClient() as client:
@@ -93,34 +99,39 @@ async def distillation_loop():
                 spike_imminent = optimizer.anticipate_spike(aether_signals)
                 if spike_imminent:
                     logger.info("[YES] ⚡ SPIKE ANTICIPATED: Scaling harvest intensity")
-                    optimizer.optimization_level += 0.2 # Temporary boost for the spike
+                    optimizer.optimization_level += 0.2
+                    for r in optimizer.regional_levels:
+                        optimizer.regional_levels[r] += 0.1
                 
-                # 3. Analyze Sovereign cycle
-                logger.info("Analyzing Sovereign cycle...")
-                
-                # Sample cycle data (In production, this would be real metrics from the system)
-                cycle_data = {
-                    "performance": 0.99 if not spike_imminent else 0.998,
-                    "efficiency": 0.995,
-                    "complexity": 1.0,
-                    "latency_us": 120,
-                    "refined_logic": "Optimized_Matrix_Factorization"
-                }
-                
-                yield_result = execute_high_yield(cycle_data)
-                
-                # 4. Distill Absolute Nectar
-                if yield_result["is_absolute_nectar"]:
-                    logger.info(f"FOUND ABSOLUTE NECTAR: {yield_result['yield_roi']}")
-                    # Mark in registry
-                    await client.post(f"{SOVEREIGN_API_URL}/vault/preserve", params={"content": f"NECTAR_{int(time.time())}_{yield_result['yield_roi']}"})
-                
-                # 5. Interlace report into Sovereign Dashboard
-                await client.post(f"{SOVEREIGN_API_URL}/yield/report", json=yield_result)
+                # 3. Analyze Trinity Cycles
+                for region in regions:
+                    logger.info(f"Analyzing {region} cycle...")
+                    
+                    # Sample cycle data per region
+                    cycle_data = {
+                        "performance": 0.99 if not spike_imminent else 0.998,
+                        "efficiency": 0.995,
+                        "complexity": 1.0,
+                        "latency_us": 120,
+                        "refined_logic": f"Optimized_Matrix_{region}"
+                    }
+                    
+                    yield_result = execute_high_yield(cycle_data, region if region != "GLOBAL" else None)
+                    
+                    # 4. Distill Absolute Nectar
+                    if yield_result["is_absolute_nectar"]:
+                        logger.info(f"FOUND ABSOLUTE NECTAR IN {region}: {yield_result['yield_roi']}")
+                        # Mark in registry
+                        await client.post(f"{SOVEREIGN_API_URL}/vault/preserve", params={"content": f"NECTAR_{region}_{int(time.time())}_{yield_result['yield_roi']}"})
+                    
+                    # 5. Interlace report into Sovereign Dashboard
+                    await client.post(f"{SOVEREIGN_API_URL}/yield/report", json=yield_result)
 
-                # Reset optimization boost after one cycle if it was boosted
+                # Reset optimization boost after one cycle
                 if spike_imminent:
                     optimizer.optimization_level -= 0.2
+                    for r in optimizer.regional_levels:
+                        optimizer.regional_levels[r] -= 0.1
 
         except Exception as e:
             logger.error(f"Error in distillation loop: {e}")
@@ -136,6 +147,7 @@ async def get_status():
     return {
         "node": "YES",
         "status": "active",
+        "trinity_status": "ASCENDED",
         "optimization": optimizer.get_report()
     }
 

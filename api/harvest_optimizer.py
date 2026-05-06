@@ -12,11 +12,16 @@ class HarvestOptimizer:
         self.telemetry_threshold_us = 500  # 0.5ms
         self.mutation_history = []
         self.optimization_level = 1.0
+        self.regional_levels = {
+            "ALPHA": 1.0,
+            "BETA": 1.0,
+            "GAMMA": 1.0
+        }
 
     def get_function_source(self, func):
         return inspect.getsource(func)
 
-    def optimize_logic(self, function_name: str, current_performance: float):
+    def optimize_logic(self, function_name: str, current_performance: float, region: Optional[str] = None):
         """
         Triggers an 'Atomic Evolution' of the harvesting algorithm.
         """
@@ -24,12 +29,20 @@ class HarvestOptimizer:
         
         # Increase optimization level based on performance signals
         if current_performance < 0.9:
-            self.optimization_level += 0.1
+            if region and region in self.regional_levels:
+                self.regional_levels[region] += 0.1
+                level = self.regional_levels[region]
+            else:
+                self.optimization_level += 0.1
+                level = self.optimization_level
+        else:
+            level = self.regional_levels.get(region, self.optimization_level) if region else self.optimization_level
         
         mutation_record = {
             "timestamp": timestamp,
             "function": function_name,
-            "optimization_level": self.optimization_level,
+            "region": region,
+            "optimization_level": level,
             "status": "applied_sub_quantum"
         }
         self.mutation_history.append(mutation_record)
@@ -66,6 +79,7 @@ class HarvestOptimizer:
     def get_report(self):
         return {
             "optimization_level": self.optimization_level,
+            "regional_levels": self.regional_levels,
             "mutations_count": len(self.mutation_history),
             "last_mutation": self.mutation_history[-1] if self.mutation_history else None
         }
