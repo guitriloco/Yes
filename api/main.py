@@ -75,20 +75,32 @@ def execute_high_yield(refinement_result: dict):
 async def distillation_loop():
     """
     The Nectar Distillation Loop.
-    Periodically analyzes cycles and marks 'Absolute Nectar'.
+    Periodically analyzes cycles, anticipates spikes via Aether-Mesh, and marks 'Absolute Nectar'.
     """
     logger.info("Starting Nectar Distillation Loop...")
     while True:
         try:
-            # 1. Analyze Sovereign cycles (Simulated by pulling from API)
             async with httpx.AsyncClient() as client:
-                # We could pull recent results or signals
-                # For now, let's assume we pull from a hypothetical endpoint or just simulate processing
+                # 1. Fetch Aether-Mesh signals
+                try:
+                    zenith_resp = await client.get(f"{SOVEREIGN_API_URL}/zenith/signals")
+                    aether_signals = zenith_resp.json()
+                except Exception as e:
+                    logger.warning(f"Failed to fetch Aether signals: {e}")
+                    aether_signals = []
+
+                # 2. Anticipate yield spikes
+                spike_imminent = optimizer.anticipate_spike(aether_signals)
+                if spike_imminent:
+                    logger.info("[YES] ⚡ SPIKE ANTICIPATED: Scaling harvest intensity")
+                    optimizer.optimization_level += 0.2 # Temporary boost for the spike
+                
+                # 3. Analyze Sovereign cycle
                 logger.info("Analyzing Sovereign cycle...")
                 
-                # Sample cycle data
+                # Sample cycle data (In production, this would be real metrics from the system)
                 cycle_data = {
-                    "performance": 0.99,
+                    "performance": 0.99 if not spike_imminent else 0.998,
                     "efficiency": 0.995,
                     "complexity": 1.0,
                     "latency_us": 120,
@@ -97,11 +109,19 @@ async def distillation_loop():
                 
                 yield_result = execute_high_yield(cycle_data)
                 
+                # 4. Distill Absolute Nectar
                 if yield_result["is_absolute_nectar"]:
                     logger.info(f"FOUND ABSOLUTE NECTAR: {yield_result['yield_roi']}")
-                    # Mark in registry (Simulated by logging and sending to Vault)
+                    # Mark in registry
                     await client.post(f"{SOVEREIGN_API_URL}/vault/preserve", params={"content": f"NECTAR_{int(time.time())}_{yield_result['yield_roi']}"})
                 
+                # 5. Interlace report into Sovereign Dashboard
+                await client.post(f"{SOVEREIGN_API_URL}/yield/report", json=yield_result)
+
+                # Reset optimization boost after one cycle if it was boosted
+                if spike_imminent:
+                    optimizer.optimization_level -= 0.2
+
         except Exception as e:
             logger.error(f"Error in distillation loop: {e}")
             

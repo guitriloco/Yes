@@ -49,6 +49,20 @@ class HarvestOptimizer:
             return "FAST_HARVEST"
         return "DEEP_HARVEST"
 
+    def anticipate_spike(self, aether_signals: List[Dict[str, Any]]) -> bool:
+        """
+        Analyzes Aether-Mesh signals to anticipate yield spikes.
+        Returns True if a spike is imminent.
+        """
+        # Spike anticipation logic: 
+        # High ROI density in aether signals indicates an imminent system-wide spike.
+        high_roi_signals = [s for s in aether_signals if s.get("roi", 0) > 0.95]
+        
+        # If more than 2 high-ROI signals appear in the mesh simultaneously
+        if len(high_roi_signals) >= 2:
+            return True
+        return False
+
     def get_report(self):
         return {
             "optimization_level": self.optimization_level,
