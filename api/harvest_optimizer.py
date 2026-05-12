@@ -15,8 +15,10 @@ class HarvestOptimizer:
         self.regional_levels = {
             "ALPHA": 1.0,
             "BETA": 1.0,
-            "GAMMA": 1.0
+            "GAMMA": 1.0,
+            "DELTA": 1.0
         }
+        self.arbitrage_records = []
 
     def get_function_source(self, func):
         return inspect.getsource(func)
@@ -76,10 +78,43 @@ class HarvestOptimizer:
             return True
         return False
 
+    def perform_yield_arbitrage(self, current_yields: Dict[str, float]):
+        """
+        Cross-cluster yield arbitrage logic.
+        Identifies underperforming clusters and reallocates optimization levels.
+        """
+        if not current_yields or len(current_yields) < 2:
+            return None
+            
+        # Find highest and lowest yield clusters
+        sorted_yields = sorted(current_yields.items(), key=lambda x: x[1])
+        underperformer, min_yield = sorted_yields[0]
+        overperformer, max_yield = sorted_yields[-1]
+        
+        # Arbitrage Trigger: Spread > 0.05
+        if (max_yield - min_yield) > 0.05:
+            if self.regional_levels[overperformer] > 0.9:
+                self.regional_levels[overperformer] -= 0.05
+                self.regional_levels[underperformer] += 0.05
+                
+                arbitrage_event = {
+                    "timestamp": time.time(),
+                    "type": "CROSS_CLUSTER_ARBITRAGE",
+                    "from": overperformer,
+                    "to": underperformer,
+                    "spread": round(max_yield - min_yield, 4),
+                    "status": "BALANCED"
+                }
+                self.arbitrage_records.append(arbitrage_event)
+                return arbitrage_event
+        return None
+
     def get_report(self):
         return {
             "optimization_level": self.optimization_level,
             "regional_levels": self.regional_levels,
             "mutations_count": len(self.mutation_history),
+            "arbitrage_events": len(self.arbitrage_records),
+            "last_arbitrage": self.arbitrage_records[-1] if self.arbitrage_records else None,
             "last_mutation": self.mutation_history[-1] if self.mutation_history else None
         }

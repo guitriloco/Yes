@@ -78,11 +78,11 @@ def execute_high_yield(refinement_result: dict, region: Optional[str] = None):
 async def distillation_loop():
     """
     The Nectar Distillation Loop.
-    Periodically analyzes cycles, anticipates spikes via Aether-Mesh, and marks 'Absolute Nectar'.
-    Expanded for Trinity Ascension (Alpha, Beta, Gamma).
+    Expanded for Hyper-Harvesting Protocol (Alpha, Beta, Gamma, Delta).
+    Implements Cross-Cluster Arbitrage and Virtual Barycenter flow.
     """
-    logger.info("Starting Nectar Distillation Loop...")
-    regions = ["ALPHA", "BETA", "GAMMA", "GLOBAL"]
+    logger.info("Starting Hyper-Harvesting Distillation Loop...")
+    regions = ["ALPHA", "BETA", "GAMMA", "DELTA"]
     
     while True:
         try:
@@ -103,40 +103,64 @@ async def distillation_loop():
                     for r in optimizer.regional_levels:
                         optimizer.regional_levels[r] += 0.1
                 
-                # 3. Analyze Trinity Cycles
+                # 3. Analyze Vertices and Collect Yields for Arbitrage
+                current_cycle_yields = {}
+                regional_results = []
+                
                 for region in regions:
-                    logger.info(f"Analyzing {region} cycle...")
+                    logger.info(f"Analyzing {region} vertex...")
                     
-                    # Sample cycle data per region
                     cycle_data = {
                         "performance": 0.99 if not spike_imminent else 0.998,
                         "efficiency": 0.995,
                         "complexity": 1.0,
                         "latency_us": 120,
-                        "refined_logic": f"Optimized_Matrix_{region}"
+                        "refined_logic": f"Hyper_Matrix_{region}"
                     }
                     
-                    yield_result = execute_high_yield(cycle_data, region if region != "GLOBAL" else None)
+                    yield_result = execute_high_yield(cycle_data, region)
+                    current_cycle_yields[region] = yield_result["yield_roi"]
+                    regional_results.append(yield_result)
                     
-                    # 4. Distill Absolute Nectar
+                    # Distill Absolute Nectar
                     if yield_result["is_absolute_nectar"]:
                         logger.info(f"FOUND ABSOLUTE NECTAR IN {region}: {yield_result['yield_roi']}")
-                        # Mark in registry
                         await client.post(f"{SOVEREIGN_API_URL}/vault/preserve", params={"content": f"NECTAR_{region}_{int(time.time())}_{yield_result['yield_roi']}"})
                     
-                    # 5. Interlace report into Sovereign Dashboard
+                    # Interlace report
                     await client.post(f"{SOVEREIGN_API_URL}/yield/report", json=yield_result)
 
-                # Reset optimization boost after one cycle
+                # 4. Cross-Cluster Yield Arbitrage
+                arbitrage_event = optimizer.perform_yield_arbitrage(current_cycle_yields)
+                if arbitrage_event:
+                    logger.info(f"[YES] ⚖️ ARBITRAGE EXECUTED: Reallocated from {arbitrage_event['from']} to {arbitrage_event['to']}")
+                    await client.post(f"{SOVEREIGN_API_URL}/telemetry", json={
+                        "name": "YIELD_ARBITRAGE",
+                        "rating": 100,
+                        "notes": f"Reallocated computational focus to balance {arbitrage_event['to']} vertex."
+                    })
+
+                # 5. Flow to Virtual Barycenter (Aggregated Equilibrium)
+                barycenter_yield = sum(current_cycle_yields.values()) / len(current_cycle_yields)
+                barycenter_report = {
+                    "vertex": "VIRTUAL_BARYCENTER",
+                    "aggregated_roi": round(barycenter_yield, 4),
+                    "cluster_equilibrium": True if not arbitrage_event else False,
+                    "timestamp": time.time()
+                }
+                logger.info(f"[YES] 🌌 Virtual Barycenter Flow: {barycenter_report['aggregated_roi']}")
+                await client.post(f"{SOVEREIGN_API_URL}/yield/report", json=barycenter_report)
+
+                # Reset optimization boost
                 if spike_imminent:
                     optimizer.optimization_level -= 0.2
                     for r in optimizer.regional_levels:
                         optimizer.regional_levels[r] -= 0.1
 
         except Exception as e:
-            logger.error(f"Error in distillation loop: {e}")
+            logger.error(f"Error in hyper-distillation loop: {e}")
             
-        await asyncio.sleep(60) # Process every minute
+        await asyncio.sleep(60)
 
 @app.on_event("startup")
 async def startup_event():
