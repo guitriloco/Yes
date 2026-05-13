@@ -15,6 +15,7 @@ except ImportError:
     engine = None
 
 from harvest_optimizer import HarvestOptimizer
+from causal_collapse import CausalCollapseEngine
 
 app = FastAPI(title="Yes Yield Execution Engine")
 
@@ -26,6 +27,7 @@ SOVEREIGN_API_URL = "http://localhost:8011"
 VVV_URL = "http://localhost:8003"
 
 optimizer = HarvestOptimizer()
+collapse_engine = CausalCollapseEngine()
 
 def calculate_roi(data: dict, region: Optional[str] = None) -> float:
     """
@@ -95,7 +97,19 @@ async def distillation_loop():
                     logger.warning(f"Failed to fetch Aether signals: {e}")
                     aether_signals = []
 
-                # 2. Anticipate yield spikes
+                # 2. Causal Collapse: O(-t^2) State Synthesis
+                mesh_density = len(aether_signals) / 10.0 # Normalized density
+                collapsed_state = collapse_engine.synthesize_state(mesh_density)
+                logger.info(f"[YES] 🌀 CAUSAL COLLAPSE: Synthesized state {collapsed_state['state_id']} with ROI {collapsed_state['predicted_roi']}")
+                
+                # Interlace with the Eternal Line (High-priority telemetry)
+                await client.post(f"{SOVEREIGN_API_URL}/telemetry", json={
+                    "name": "ETERNAL_LINE_INTERLACE",
+                    "rating": 100,
+                    "notes": f"Causal Collapse Synthesis: {collapsed_state['state_id']} interlace complete."
+                })
+
+                # 3. Anticipate yield spikes
                 spike_imminent = optimizer.anticipate_spike(aether_signals)
                 if spike_imminent:
                     logger.info("[YES] ⚡ SPIKE ANTICIPATED: Scaling harvest intensity")
@@ -172,7 +186,9 @@ async def get_status():
         "node": "YES",
         "status": "active",
         "trinity_status": "ASCENDED",
-        "optimization": optimizer.get_report()
+        "causal_status": "O(-t^2) ACTIVE",
+        "optimization": optimizer.get_report(),
+        "causal_collapse": collapse_engine.get_collapse_report()
     }
 
 @app.post("/optimize")
