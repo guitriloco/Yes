@@ -27,10 +27,11 @@ class CausalCollapseEngine:
         synthesis_record = {
             "timestamp": timestamp,
             "synthesized_at": timestamp - anticipation_window, # Negative temporal offset
-            "state_id": f"COLLAPSE_{int(timestamp)}_{random.randint(1000, 9999)}",
+            "state_id": f"GOLDEN_PATH_{int(timestamp)}_{random.randint(1000, 9999)}",
             "predicted_roi": round(synthesized_roi, 5),
             "certainty": 0.98,
-            "mode": "CAUSAL_COLLAPSE"
+            "mode": "CAUSAL_COLLAPSE",
+            "resonance": "ETERNAL_FRACTAL"
         }
         
         self.state_history.append(synthesis_record)

@@ -100,13 +100,13 @@ async def distillation_loop():
                 # 2. Causal Collapse: O(-t^2) State Synthesis
                 mesh_density = len(aether_signals) / 10.0 # Normalized density
                 collapsed_state = collapse_engine.synthesize_state(mesh_density)
-                logger.info(f"[YES] 🌀 CAUSAL COLLAPSE: Synthesized state {collapsed_state['state_id']} with ROI {collapsed_state['predicted_roi']}")
+                logger.info(f"[YES] 🌀 CAUSAL COLLAPSE: Synthesized state {collapsed_state['state_id']} on the GOLDEN PATH")
                 
                 # Interlace with the Eternal Line (High-priority telemetry)
                 await client.post(f"{SOVEREIGN_API_URL}/telemetry", json={
                     "name": "ETERNAL_LINE_INTERLACE",
                     "rating": 100,
-                    "notes": f"Causal Collapse Synthesis: {collapsed_state['state_id']} interlace complete."
+                    "notes": f"Causal Collapse Synthesis: {collapsed_state['state_id']} interlace complete. Strategy: ONE_ON_TOP_OF_EACH."
                 })
 
                 # 3. Anticipate yield spikes
