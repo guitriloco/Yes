@@ -64,13 +64,17 @@ def execute_high_yield(refinement_result: dict, region: Optional[str] = None):
     # 5. If ROI > Threshold, mark as "Absolute Nectar"
     is_absolute_nectar = actual_roi > 0.98
     
+    # 6. Causal Alignment Check
+    is_collapsed_nectar = is_absolute_nectar and collapse_engine.state_history[-1]["certainty"] > 0.95 if collapse_engine.state_history else False
+    
     result = {
         "execution_status": "CONQUERED",
         "mode": mode,
         "region": region or "GLOBAL",
         "yield_roi": actual_roi,
         "is_absolute_nectar": is_absolute_nectar,
-        "nectar_classification": "Absolute Nectar" if is_absolute_nectar else "High Grade Nectar",
+        "is_collapsed_nectar": is_collapsed_nectar,
+        "nectar_classification": "Eternal Collapsed Nectar" if is_collapsed_nectar else ("Absolute Nectar" if is_absolute_nectar else "High Grade Nectar"),
         "optimization_meta": optimizer.get_report(),
         "timestamp": time.time()
     }
@@ -129,7 +133,9 @@ async def distillation_loop():
                         "efficiency": 0.995,
                         "complexity": 1.0,
                         "latency_us": 120,
-                        "refined_logic": f"Hyper_Matrix_{region}"
+                        "refined_logic": f"Hyper_Matrix_{region}",
+                        "causal_state": collapsed_state["state_id"],
+                        "predicted_roi": collapsed_state["predicted_roi"]
                     }
                     
                     yield_result = execute_high_yield(cycle_data, region)
