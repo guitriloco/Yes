@@ -1,6 +1,8 @@
 {
   "vivos_version": "13.0",
   "alignment": "GOLDEN_PATH",
+  "aggregate": "YIELD-SIPHON",
+  "nexus_role": "Yield",
   "capabilities": [],
   "dependencies": ["Sovereign-Intelligence-SDK"],
   "telemetry": {
